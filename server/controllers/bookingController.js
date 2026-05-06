@@ -1,5 +1,4 @@
-import { getDB, saveDB } from '../config/db.js';
-import { generateId } from '../config/idgen.js';
+import Booking from '../models/Booking.js';
 import { sendBookingEmail } from '../services/emailService.js';
 
 // Available slots configuration
@@ -29,16 +28,13 @@ export const getAvailableSlots = async (req, res) => {
 
     const config = AVAILABLE_SLOTS[type];
     const dateStr = new Date(date).toISOString().split('T')[0];
-    const db = getDB();
 
-    // Get existing bookings for this date and type
-    const existingBookings = db.data.bookings.filter(b =>
-      b.type === type &&
-      b.date === dateStr &&
-      b.status !== 'cancelled'
-    );
+    const existingBookings = await Booking.find({
+      type,
+      date: dateStr,
+      status: { $ne: 'cancelled' },
+    });
 
-    // Calculate available slots
     const slots = config.slots.map((slot) => {
       const bookingsInSlot = existingBookings.filter((b) => b.timeSlot === slot).length;
       return {
@@ -50,6 +46,7 @@ export const getAvailableSlots = async (req, res) => {
 
     res.json({ success: true, slots, classes: config.classes, trainers: config.trainers });
   } catch (error) {
+    console.error('getAvailableSlots error:', error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };
@@ -70,29 +67,33 @@ export const createBooking = async (req, res) => {
     }
 
     const dateStr = new Date(date).toISOString().split('T')[0];
-    const db = getDB();
 
     // Check slot availability
-    const existingCount = db.data.bookings.filter(b =>
-      b.type === type && b.date === dateStr && b.timeSlot === timeSlot && b.status !== 'cancelled'
-    ).length;
+    const existingCount = await Booking.countDocuments({
+      type,
+      date: dateStr,
+      timeSlot,
+      status: { $ne: 'cancelled' },
+    });
 
     if (existingCount >= config.maxPerSlot) {
       return res.status(400).json({ success: false, message: 'This slot is fully booked' });
     }
 
     // Check if user already has a booking at this time
-    const userExisting = db.data.bookings.find(b =>
-      b.userId === req.user.id && b.date === dateStr && b.timeSlot === timeSlot && b.status !== 'cancelled'
-    );
+    const userExisting = await Booking.findOne({
+      userId: req.user._id,
+      date: dateStr,
+      timeSlot,
+      status: { $ne: 'cancelled' },
+    });
 
     if (userExisting) {
       return res.status(400).json({ success: false, message: 'You already have a booking at this time' });
     }
 
-    const booking = {
-      id: generateId(),
-      userId: req.user.id,
+    const booking = await Booking.create({
+      userId: req.user._id,
       type,
       className,
       trainer: trainer || '',
@@ -100,11 +101,7 @@ export const createBooking = async (req, res) => {
       timeSlot,
       status: 'confirmed',
       notes: notes || '',
-      createdAt: new Date().toISOString(),
-    };
-
-    db.data.bookings.push(booking);
-    await saveDB();
+    });
 
     // Send confirmation email (non-blocking)
     sendBookingEmail(req.user, booking).catch(() => {});
@@ -120,13 +117,12 @@ export const createBooking = async (req, res) => {
 // @route   GET /api/bookings/my
 export const getMyBookings = async (req, res) => {
   try {
-    const db = getDB();
-    const bookings = db.data.bookings
-      .filter(b => b.userId === req.user.id)
-      .sort((a, b) => new Date(b.date) - new Date(a.date))
-      .slice(0, 50);
+    const bookings = await Booking.find({ userId: req.user._id })
+      .sort({ date: -1 })
+      .limit(50);
     res.json({ success: true, bookings });
   } catch (error) {
+    console.error('getMyBookings error:', error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };
@@ -135,8 +131,10 @@ export const getMyBookings = async (req, res) => {
 // @route   PUT /api/bookings/:id/cancel
 export const cancelBooking = async (req, res) => {
   try {
-    const db = getDB();
-    const booking = db.data.bookings.find(b => b.id === req.params.id && b.userId === req.user.id);
+    const booking = await Booking.findOne({
+      _id: req.params.id,
+      userId: req.user._id,
+    });
 
     if (!booking) {
       return res.status(404).json({ success: false, message: 'Booking not found' });
@@ -146,9 +144,11 @@ export const cancelBooking = async (req, res) => {
     }
 
     booking.status = 'cancelled';
-    await saveDB();
+    await booking.save();
+
     res.json({ success: true, booking });
   } catch (error) {
+    console.error('cancelBooking error:', error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };

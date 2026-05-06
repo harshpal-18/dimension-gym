@@ -1,13 +1,11 @@
 import jwt from 'jsonwebtoken';
-import bcrypt from 'bcryptjs';
 import { validationResult } from 'express-validator';
-import { getDB, saveDB } from '../config/db.js';
-import { generateId } from '../config/idgen.js';
+import User from '../models/User.js';
 import { sendWelcomeEmail } from '../services/emailService.js';
 
 // Generate JWT token
 const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRE });
+  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRE || '7d' });
 };
 
 // @desc    Register new user
@@ -20,45 +18,32 @@ export const signup = async (req, res) => {
 
   try {
     const { name, email, phone, password } = req.body;
-    const db = getDB();
 
-    // Check if user already exists
-    const existingUser = db.data.users.find(u => u.email === email.toLowerCase());
+    const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
       return res.status(400).json({ success: false, message: 'Email already registered' });
     }
 
-    // Hash password
-    const salt = await bcrypt.genSalt(12);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    const user = {
-      id: generateId(),
+    const user = await User.create({
       name: name.trim(),
       email: email.toLowerCase().trim(),
       phone: phone?.trim() || '',
-      password: hashedPassword,
+      password,
       role: 'user',
       activePlan: 'none',
-      membershipStart: null,
-      membershipExpiry: null,
       isActive: true,
-      createdAt: new Date().toISOString(),
-    };
-
-    db.data.users.push(user);
-    await saveDB();
+    });
 
     // Send welcome email (non-blocking)
     sendWelcomeEmail(user).catch(() => {});
 
-    const token = generateToken(user.id);
+    const token = generateToken(user._id);
 
     res.status(201).json({
       success: true,
       token,
       user: {
-        id: user.id,
+        id: user._id,
         name: user.name,
         email: user.email,
         phone: user.phone,
@@ -84,14 +69,13 @@ export const login = async (req, res) => {
 
   try {
     const { email, password } = req.body;
-    const db = getDB();
 
-    const user = db.data.users.find(u => u.email === email.toLowerCase());
+    const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
     if (!user) {
       return res.status(401).json({ success: false, message: 'Invalid email or password' });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await user.matchPassword(password);
     if (!isMatch) {
       return res.status(401).json({ success: false, message: 'Invalid email or password' });
     }
@@ -100,13 +84,13 @@ export const login = async (req, res) => {
       return res.status(401).json({ success: false, message: 'Account has been deactivated' });
     }
 
-    const token = generateToken(user.id);
+    const token = generateToken(user._id);
 
     res.json({
       success: true,
       token,
       user: {
-        id: user.id,
+        id: user._id,
         name: user.name,
         email: user.email,
         phone: user.phone,
@@ -126,13 +110,13 @@ export const login = async (req, res) => {
 // @route   GET /api/auth/me
 export const getMe = async (req, res) => {
   try {
-    const user = req.user;
+    const user = await User.findById(req.user._id);
     const isMembershipActive = user.membershipExpiry ? new Date(user.membershipExpiry) > new Date() : false;
 
     res.json({
       success: true,
       user: {
-        id: user.id,
+        id: user._id,
         name: user.name,
         email: user.email,
         phone: user.phone,
@@ -154,17 +138,20 @@ export const getMe = async (req, res) => {
 export const updateProfile = async (req, res) => {
   try {
     const { name, phone } = req.body;
-    const db = getDB();
-    const user = db.data.users.find(u => u.id === req.user.id);
 
-    if (name) user.name = name.trim();
-    if (phone !== undefined) user.phone = phone.trim();
-    await saveDB();
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      {
+        ...(name && { name: name.trim() }),
+        ...(phone !== undefined && { phone: phone.trim() }),
+      },
+      { new: true }
+    );
 
     res.json({
       success: true,
       user: {
-        id: user.id,
+        id: user._id,
         name: user.name,
         email: user.email,
         phone: user.phone,

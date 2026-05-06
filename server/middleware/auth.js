@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { getDB } from '../config/db.js';
+import User from '../models/User.js';
 
 // Protect routes - require authentication
 export const protect = async (req, res, next) => {
@@ -15,8 +15,7 @@ export const protect = async (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const db = getDB();
-    const user = db.data.users.find(u => u.id === decoded.id);
+    const user = await User.findById(decoded.id);
 
     if (!user) {
       return res.status(401).json({ success: false, message: 'User not found' });

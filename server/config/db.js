@@ -1,43 +1,19 @@
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
-import { Low } from 'lowdb';
-import { JSONFile } from 'lowdb/node';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const dbPath = join(__dirname, '..', 'data', 'db.json');
-
-const defaultData = {
-  users: [],
-  payments: [],
-  bookings: [],
-};
-
-let db;
+import mongoose from 'mongoose';
 
 export async function initDB() {
-  const { mkdirSync } = await import('fs');
   try {
-    mkdirSync(join(__dirname, '..', 'data'), { recursive: true });
-  } catch { /* dir exists */ }
-
-  const adapter = new JSONFile(dbPath);
-  db = new Low(adapter, defaultData);
-  await db.read();
-
-  // Ensure defaults
-  db.data ||= defaultData;
-  db.data.users ||= [];
-  db.data.payments ||= [];
-  db.data.bookings ||= [];
-
-  await db.write();
-  console.log('✅ Database initialized (JSON file)');
+    await mongoose.connect(process.env.MONGO_URI);
+    console.log('✅ MongoDB Atlas connected');
+  } catch (error) {
+    console.error('❌ MongoDB connection failed:', error);
+    process.exit(1);
+  }
 }
 
 export function getDB() {
-  return db;
+  return mongoose.connection;
 }
 
 export async function saveDB() {
-  await db.write();
+  // Not needed with MongoDB
 }

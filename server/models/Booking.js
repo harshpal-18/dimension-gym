@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 const bookingSchema = new mongoose.Schema({
-  user: {
+  userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true,
@@ -22,12 +22,12 @@ const bookingSchema = new mongoose.Schema({
     trim: true,
   },
   date: {
-    type: Date,
+    type: String,
     required: true,
   },
   timeSlot: {
     type: String,
-    required: true, // e.g. "09:00-10:00"
+    required: true,
   },
   status: {
     type: String,
@@ -43,10 +43,7 @@ const bookingSchema = new mongoose.Schema({
   timestamps: true,
 });
 
-// Prevent double booking: same user, date, and time slot
-bookingSchema.index({ user: 1, date: 1, timeSlot: 1 }, { unique: true });
-
-// Prevent slot overflow: same type, date, timeSlot (limit checked in controller)
+bookingSchema.index({ userId: 1, date: 1, timeSlot: 1 });
 bookingSchema.index({ type: 1, date: 1, timeSlot: 1 });
 
 export default mongoose.model('Booking', bookingSchema);

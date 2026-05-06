@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import Razorpay from 'razorpay';
-import { getDB, saveDB } from '../config/db.js';
-import { generateId } from '../config/idgen.js';
+import Payment from '../models/Payment.js';
+import User from '../models/User.js';
 import { sendPaymentEmail } from '../services/emailService.js';
 
 // Plan pricing (in paise for Razorpay — ₹ * 100)
@@ -35,19 +35,17 @@ export const createOrder = async (req, res) => {
     const order = await razorpay.orders.create({
       amount: planDetails.amount,
       currency: 'INR',
-      receipt: `order_${req.user.id}_${Date.now()}`,
+      receipt: `order_${req.user._id}_${Date.now()}`,
       notes: {
-        userId: req.user.id,
-        plan: plan,
+        userId: req.user._id.toString(),
+        plan,
         planName: planDetails.name,
       },
     });
 
     // Save the order in DB
-    const db = getDB();
-    db.data.payments.push({
-      id: generateId(),
-      userId: req.user.id,
+    await Payment.create({
+      userId: req.user._id,
       razorpayOrderId: order.id,
       razorpayPaymentId: null,
       razorpaySignature: null,
@@ -55,9 +53,7 @@ export const createOrder = async (req, res) => {
       amount: planDetails.amount,
       currency: 'INR',
       status: 'created',
-      createdAt: new Date().toISOString(),
     });
-    await saveDB();
 
     res.json({
       success: true,
@@ -76,7 +72,6 @@ export const createOrder = async (req, res) => {
 export const verifyPayment = async (req, res) => {
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
-    const db = getDB();
 
     // Verify signature
     const body = razorpay_order_id + '|' + razorpay_payment_id;
@@ -85,14 +80,14 @@ export const verifyPayment = async (req, res) => {
       .update(body)
       .digest('hex');
 
-    const payment = db.data.payments.find(p => p.razorpayOrderId === razorpay_order_id);
+    const payment = await Payment.findOne({ razorpayOrderId: razorpay_order_id });
     if (!payment) {
       return res.status(404).json({ success: false, message: 'Payment record not found' });
     }
 
     if (expectedSignature !== razorpay_signature) {
       payment.status = 'failed';
-      await saveDB();
+      await payment.save();
       return res.status(400).json({ success: false, message: 'Payment verification failed' });
     }
 
@@ -100,11 +95,12 @@ export const verifyPayment = async (req, res) => {
     payment.razorpayPaymentId = razorpay_payment_id;
     payment.razorpaySignature = razorpay_signature;
     payment.status = 'paid';
+    await payment.save();
 
     // Update user membership
     const planDuration = PLAN_PRICES[payment.plan].duration;
     const now = new Date();
-    const user = db.data.users.find(u => u.id === payment.userId);
+    const user = await User.findById(payment.userId);
 
     let expiryDate;
     if (user.membershipExpiry && new Date(user.membershipExpiry) > now) {
@@ -116,9 +112,9 @@ export const verifyPayment = async (req, res) => {
     }
 
     user.activePlan = payment.plan;
-    user.membershipStart = now.toISOString();
-    user.membershipExpiry = expiryDate.toISOString();
-    await saveDB();
+    user.membershipStart = now;
+    user.membershipExpiry = expiryDate;
+    await user.save();
 
     // Send confirmation email (non-blocking)
     sendPaymentEmail(user, payment).catch(() => {});
@@ -126,7 +122,12 @@ export const verifyPayment = async (req, res) => {
     res.json({
       success: true,
       message: 'Payment verified successfully',
-      payment: { id: payment.razorpayPaymentId, plan: payment.plan, amount: payment.amount, status: payment.status },
+      payment: {
+        id: payment.razorpayPaymentId,
+        plan: payment.plan,
+        amount: payment.amount,
+        status: payment.status,
+      },
     });
   } catch (error) {
     console.error('Payment verification error:', error);
@@ -138,13 +139,12 @@ export const verifyPayment = async (req, res) => {
 // @route   GET /api/payment/history
 export const getPaymentHistory = async (req, res) => {
   try {
-    const db = getDB();
-    const payments = db.data.payments
-      .filter(p => p.userId === req.user.id)
-      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    const payments = await Payment.find({ userId: req.user._id })
+      .sort({ createdAt: -1 });
 
     res.json({ success: true, payments });
   } catch (error) {
+    console.error('getPaymentHistory error:', error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };

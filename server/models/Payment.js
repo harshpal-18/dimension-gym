@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 const paymentSchema = new mongoose.Schema({
-  user: {
+  userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true,
@@ -44,7 +44,6 @@ const paymentSchema = new mongoose.Schema({
   timestamps: true,
 });
 
-// Index for preventing duplicate orders
 paymentSchema.index({ razorpayOrderId: 1 }, { unique: true });
 
 export default mongoose.model('Payment', paymentSchema);

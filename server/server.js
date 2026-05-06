@@ -1,10 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import bcrypt from 'bcryptjs';
-
-import { initDB, getDB, saveDB } from './config/db.js';
-import { generateId } from './config/idgen.js';
+import { initDB } from './config/db.js';
+import User from './models/User.js';
 
 import authRoutes from './routes/auth.js';
 import paymentRoutes from './routes/payment.js';
@@ -41,7 +39,6 @@ app.get('/api/health', (req, res) => {
 // Global error handler
 app.use((err, req, res, next) => {
   console.error('❌ Unhandled Error:', err);
-
   res.status(500).json({
     success: false,
     message: 'Internal server error',
@@ -59,44 +56,26 @@ app.use((req, res) => {
 // Seed admin user
 const seedAdmin = async () => {
   try {
-    const db = getDB();
-
     const adminEmail = (
-      process.env.ADMIN_EMAIL ||
-      'admin@dimensiongym.com'
+      process.env.ADMIN_EMAIL || 'admin@dimensiongym.com'
     ).toLowerCase();
 
-    const existing = db.data.users.find(
-      (u) => u.email === adminEmail
-    );
+    const existing = await User.findOne({ email: adminEmail });
 
     if (!existing) {
-      const salt = await bcrypt.genSalt(12);
-
-      const hashedPassword = await bcrypt.hash(
-        process.env.ADMIN_PASSWORD || 'admin123456',
-        salt
-      );
-
-      db.data.users.push({
-        id: generateId(),
+      await User.create({
         name: 'Admin',
         email: adminEmail,
-        phone: '',
-        password: hashedPassword,
+        password: process.env.ADMIN_PASSWORD || 'admin123456',
         role: 'admin',
         activePlan: 'premium',
-        membershipStart: new Date().toISOString(),
-        membershipExpiry: new Date(
-          Date.now() + 365 * 24 * 60 * 60 * 1000
-        ).toISOString(),
+        membershipStart: new Date(),
+        membershipExpiry: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
         isActive: true,
-        createdAt: new Date().toISOString(),
       });
-
-      await saveDB();
-
       console.log(`👑 Admin user created: ${adminEmail}`);
+    } else {
+      console.log(`👑 Admin already exists: ${adminEmail}`);
     }
   } catch (error) {
     console.error('❌ Admin seed error:', error);
@@ -112,11 +91,7 @@ const startServer = async () => {
     app.listen(PORT, () => {
       console.log(`🔥 Dimension Gym API running on port ${PORT}`);
       console.log(`📡 Environment: ${process.env.NODE_ENV || 'development'}`);
-      console.log(
-        `🌐 Client URL: ${
-          process.env.CLIENT_URL || 'http://localhost:5173'
-        }`
-      );
+      console.log(`🌐 Client URL: ${process.env.CLIENT_URL || 'http://localhost:5173'}`);
     });
   } catch (error) {
     console.error('❌ Server startup failed:', error);
