@@ -1,0 +1,95 @@
+{
+  "users": [
+    {
+      "id": "momz7m76-h6qx3o-1",
+      "name": "Admin",
+      "email": "admin@dimensiongym.com",
+      "phone": "",
+      "password": "$2a$12$2TuT85Qtkf.WGoYNFxw0K.2.BHpog0y0PKTbaZ38BE6YF.X0XBBhu",
+      "role": "admin",
+      "activePlan": "premium",
+      "membershipStart": "2026-05-01T13:56:23.970Z",
+      "membershipExpiry": "2027-05-01T13:56:23.976Z",
+      "isActive": true,
+      "createdAt": "2026-05-01T13:56:23.976Z"
+    },
+    {
+      "id": "momz8y72-ngcjfn-2",
+      "name": "Test User",
+      "email": "test@dimensiongym.com",
+      "phone": "",
+      "password": "$2a$12$2YkZkAFuEYiCbEonQy9f7.6wDn2Z2MKzszChZbjvpjHzgvU.QN9Lq",
+      "role": "user",
+      "activePlan": "none",
+      "membershipStart": null,
+      "membershipExpiry": null,
+      "isActive": true,
+      "createdAt": "2026-05-01T13:57:26.174Z"
+    },
+    {
+      "id": "mondhg0n-nrxekf-1",
+      "name": "Harsh Pal",
+      "email": "hp2363510@gmail.com",
+      "phone": "",
+      "password": "$2a$12$6TrQqRW4xNOFYN5vONacH..x7gE5as6WgSM1u3Q7mVcA5S4ecROmu",
+      "role": "user",
+      "activePlan": "none",
+      "membershipStart": null,
+      "membershipExpiry": null,
+      "isActive": true,
+      "createdAt": "2026-05-01T20:35:57.143Z"
+    }
+  ],
+  "payments": [
+    {
+      "id": "motxrzl6-eejwcl-1",
+      "userId": "mondhg0n-nrxekf-1",
+      "razorpayOrderId": "order_Sm3GISFqnGw08z",
+      "razorpayPaymentId": null,
+      "razorpaySignature": null,
+      "plan": "premium",
+      "amount": 9900,
+      "currency": "INR",
+      "status": "created",
+      "createdAt": "2026-05-06T10:50:38.442Z"
+    },
+    {
+      "id": "motxvfat-l0r9d2-2",
+      "userId": "mondhg0n-nrxekf-1",
+      "razorpayOrderId": "order_Sm3J7TF4jmtC66",
+      "razorpayPaymentId": null,
+      "razorpaySignature": null,
+      "plan": "premium",
+      "amount": 9900,
+      "currency": "INR",
+      "status": "created",
+      "createdAt": "2026-05-06T10:53:18.773Z"
+    },
+    {
+      "id": "moty1z2u-jda5xl-3",
+      "userId": "mondhg0n-nrxekf-1",
+      "razorpayOrderId": "order_Sm3OV1SYqT8CIS",
+      "razorpayPaymentId": null,
+      "razorpaySignature": null,
+      "plan": "premium",
+      "amount": 9900,
+      "currency": "INR",
+      "status": "created",
+      "createdAt": "2026-05-06T10:58:24.342Z"
+    }
+  ],
+  "bookings": [
+    {
+      "id": "mon79brm-3o0eip-3",
+      "userId": "momz7m76-h6qx3o-1",
+      "type": "personal-training",
+      "className": "Body Transformation",
+      "trainer": "",
+      "date": "2026-05-02",
+      "timeSlot": "08:00-09:00",
+      "status": "cancelled",
+      "notes": "",
+      "createdAt": "2026-05-01T17:41:40.691Z"
+    }
+  ]
+}
