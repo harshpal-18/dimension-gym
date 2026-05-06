@@ -33,9 +33,9 @@
       "phone": "",
       "password": "$2a$12$6TrQqRW4xNOFYN5vONacH..x7gE5as6WgSM1u3Q7mVcA5S4ecROmu",
       "role": "user",
-      "activePlan": "none",
-      "membershipStart": null,
-      "membershipExpiry": null,
+      "activePlan": "basic",
+      "membershipStart": "2026-05-06T16:55:57.531Z",
+      "membershipExpiry": "2026-06-05T16:55:57.531Z",
       "isActive": true,
       "createdAt": "2026-05-01T20:35:57.143Z"
     }
@@ -76,6 +76,30 @@
       "currency": "INR",
       "status": "created",
       "createdAt": "2026-05-06T10:58:24.342Z"
+    },
+    {
+      "id": "mouaq6qa-ughda2-1",
+      "userId": "mondhg0n-nrxekf-1",
+      "razorpayOrderId": "order_Sm9REq1c51MoCl",
+      "razorpayPaymentId": null,
+      "razorpaySignature": null,
+      "plan": "premium",
+      "amount": 9900,
+      "currency": "INR",
+      "status": "created",
+      "createdAt": "2026-05-06T16:53:09.394Z"
+    },
+    {
+      "id": "mouaso21-my5hn3-2",
+      "userId": "mondhg0n-nrxekf-1",
+      "razorpayOrderId": "order_Sm9THGyzU2QP35",
+      "razorpayPaymentId": "pay_Sm9Tmj6pJoVihs",
+      "razorpaySignature": "a7c507bed9f111353bbd60441d8b1ff28e9f85ed512e0fde66c05ca45225c593",
+      "plan": "basic",
+      "amount": 2900,
+      "currency": "INR",
+      "status": "paid",
+      "createdAt": "2026-05-06T16:55:05.161Z"
     }
   ],
   "bookings": [
