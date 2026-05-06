@@ -17,9 +17,10 @@ const PORT = process.env.PORT || 5000;
 // Middleware
 app.use(cors({
   origin: [
-    process.env.CLIENT_URL || 'http://localhost:5173',
-    'https://dimension-gym.vercel.app',
     'http://localhost:5173',
+    'https://dimension-gym.vercel.app',
+    'https://dimension-gym-git-main-itsmeharshp0-4257s-projects.vercel.app',
+    'https://dimension-6xnnkyqvb-itsmeharshp0-4257s-projects.vercel.app',
   ],
   credentials: true,
 }));
