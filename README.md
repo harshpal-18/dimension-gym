@@ -42,10 +42,13 @@ Vercel (Frontend)
 Render (Backend)
 MongoDB Atlas
 
-📁 Folder Structure
+# 📁 Folder Structure
+
+```bash
 dimension-gym/
 │
 ├── public/
+│
 ├── src/
 │   ├── components/
 │   ├── context/
@@ -65,6 +68,7 @@ dimension-gym/
 ├── .env
 ├── package.json
 └── README.md
+```
 
 ⚙️ Environment Variables
 Frontend .env
