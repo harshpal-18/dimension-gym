@@ -29,6 +29,7 @@ Vite
 Tailwind CSS
 Axios
 Framer Motion
+
 Backend
 Node.js
 Express.js
@@ -40,6 +41,7 @@ Deployment
 Vercel (Frontend)
 Render (Backend)
 MongoDB Atlas
+
 📁 Folder Structure
 dimension-gym/
 │
@@ -63,6 +65,7 @@ dimension-gym/
 ├── .env
 ├── package.json
 └── README.md
+
 ⚙️ Environment Variables
 Frontend .env
 VITE_API_URL=https://your-backend-url.onrender.com/api
@@ -81,27 +84,26 @@ RAZORPAY_KEY_SECRET=your_key_secret
 
 ADMIN_EMAIL=admin@dimensiongym.com
 ADMIN_PASSWORD=your_admin_password
+
 🧑‍💻 Installation
 Clone Repository
 git clone https://github.com/harshpal-18/dimension-gym.git
 cd dimension-gym
+
 ▶️ Frontend Setup
 npm install
 npm run dev
 
-Runs on:
+Runs on: http://localhost:5173
 
-http://localhost:5173
 ▶️ Backend Setup
 cd server
 npm install
 npm start
 
-Runs on:
+Runs on: http://localhost:5000
 
-http://localhost:5000
 💳 Razorpay Test Mode
-
 Use Razorpay Test Keys during development.
 
 Official Docs:
@@ -114,6 +116,7 @@ Backend Deployment
 Render
 Database
 MongoDB Atlas
+
 📸 Screenshots
 Home Page
 Modern responsive landing page
@@ -125,6 +128,7 @@ Login & Signup Modal
 JWT-based authentication
 Payments
 Razorpay integration
+
 Membership payment system
 🔥 Future Improvements
 📊 Analytics Dashboard
